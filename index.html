@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>타자 게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--bg:#dcebf5;--ink:#0f2742;--me:#e8512e;--ai:#1f8f84;--gold:#ffc83d;--mute:#5d7188}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',sans-serif;line-height:1.6}
+.hide{display:none!important}
+.screen{max-width:760px;margin:0 auto;padding:24px 20px 60px}
+.flag{height:56px;border-radius:10px;background:repeating-conic-gradient(var(--ink) 0 25%,#fff 0 50%) 0 0/28px 28px}
+h1{font-family:'Jua',sans-serif;font-weight:400;font-size:clamp(64px,18vw,128px);line-height:1.1;margin:28px 0 4px;text-align:center}
+.sub{text-align:center;color:var(--mute);font-size:18px;margin:0 0 32px}
+button{font:inherit;cursor:pointer;border:0;border-radius:14px;background:var(--ink);color:#fff;padding:12px 22px;font-weight:700}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.big{display:block;margin:0 auto;font-family:'Jua',sans-serif;font-weight:400;font-size:28px;padding:16px 40px;background:var(--me)}
+details{margin-top:36px;background:#fff;border-radius:14px;padding:14px 18px}
+summary{cursor:pointer;font-weight:700}
+details p{margin:10px 0;color:var(--mute);font-size:15px}
+textarea{width:100%;font:inherit;font-size:16px;padding:10px;border:2px solid #c3d3e2;border-radius:10px;resize:vertical}
+dialog{border:0;border-radius:18px;padding:28px;max-width:440px;width:calc(100% - 32px);color:var(--ink)}
+dialog::backdrop{background:rgba(15,39,66,.6)}
+dialog h2{font-family:'Jua',sans-serif;font-weight:400;font-size:30px;margin:0 0 8px}
+dialog ol{padding-left:22px;margin:0 0 20px}
+dialog li{margin-bottom:8px}
+dialog button{width:100%;background:var(--me);font-size:18px}
+.top{display:flex;justify-content:space-between;font-weight:700;margin-bottom:14px}
+.lane{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.name{width:30px;font-weight:700;text-align:center}
+.track{position:relative;flex:1;height:52px;background:#fff;border-radius:26px;overflow:hidden}
+.car{position:absolute;top:6px;left:0;width:40px;height:40px;border-radius:50%;color:#fff;font-weight:700;display:grid;place-items:center;font-size:15px}
+#me{background:var(--me)}#ai{background:var(--ai)}
+.fin{position:absolute;right:0;top:0;bottom:0;width:22px;background:repeating-conic-gradient(var(--ink) 0 25%,#fff 0 50%) 0 0/11px 11px}
+.text{margin:26px 0 14px;padding:22px;background:#fff;border-radius:14px;font-size:clamp(20px,4.6vw,28px);font-weight:700;line-height:1.7;white-space:pre-wrap;word-break:keep-all;min-height:90px}
+.text span{color:#9db0c3}
+.text .ok{color:var(--ai)}
+.text .bad{color:#fff;background:var(--me);border-radius:4px}
+.text .cur{color:var(--ink);border-bottom:3px solid var(--gold)}
+#inp{width:100%;font:inherit;font-size:22px;padding:14px 16px;border:3px solid var(--ink);border-radius:14px;background:#fff;color:var(--ink)}
+#inp:disabled{opacity:.5}
+.msg{margin-top:20px;text-align:center;min-height:120px}
+.count{font-family:'Jua',sans-serif;font-size:72px;line-height:1}
+.res strong{font-family:'Jua',sans-serif;font-weight:400;font-size:30px;display:block;margin-bottom:6px}
+.res .st{display:block;color:var(--ink)}
+.res .hint{color:var(--mute);margin:10px 0}
+.res button{margin:4px}
+</style>
+</head>
+<body>
+
+<section id="intro" class="screen">
+  <div class="flag"></div>
+  <h1>타자 게임</h1>
+  <p class="sub">무작위 속도의 AI와 타자 레이스!</p>
+  <button id="startBtn" class="big">게임 시작하기!</button>
+  <details>
+    <summary>내가 원하는 문장으로 하고 싶다면</summary>
+    <p>한 줄에 한 문장씩 적어주세요. 비워두면 기본 문장으로 진행해요.</p>
+    <textarea id="custom" rows="5" placeholder="예)&#10;오늘도 좋은 하루 보내세요&#10;내가 좋아하는 문장 입력하기"></textarea>
+  </details>
+</section>
+
+<dialog id="rules">
+  <h2>게임 방법</h2>
+  <ol>
+    <li>화면에 나온 문장을 똑같이 입력창에 입력해요.</li>
+    <li>주황색은 나, 초록색은 AI예요. 문장마다 AI의 타자 속도가 무작위로 바뀌어요.</li>
+    <li>먼저 결승선에 도착하면 승리! 문장이 끝나면 멈추고 타수를 알려줘요. Enter를 누르면 다음 문장으로 넘어가요.</li>
+    <li>그럼 게임을 시작해보아요!</li>
+  </ol>
+  <button id="goBtn">게임 시작!</button>
+</dialog>
+
+<section id="game" class="screen hide">
+  <div class="top"><span id="round"></span><span id="score"></span></div>
+  <div class="lane"><span class="name">나</span><div class="track"><span id="me" class="car">나</span><span class="fin"></span></div></div>
+  <div class="lane"><span class="name">AI</span><div class="track"><span id="ai" class="car">AI</span><span class="fin"></span></div></div>
+  <div id="text" class="text"></div>
+  <input id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 입력하세요" disabled>
+  <div id="msg" class="msg"></div>
+</section>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// 기본 문장 (속담 + 직접 만든 문장). 여기를 고치면 기본 문장이 바뀌어요.
+const DEFAULT = [
+  "가는 말이 고우면 오는 말이 곱다",
+  "티끌 모아 태산",
+  "천 리 길도 한 걸음부터",
+  "낮말은 새가 듣고 밤말은 쥐가 듣는다",
+  "세 살 버릇 여든까지 간다",
+  "아는 길도 물어 가라",
+  "소 잃고 외양간 고친다",
+  "백지장도 맞들면 낫다",
+  "원숭이도 나무에서 떨어진다",
+  "열 번 찍어 안 넘어가는 나무 없다",
+  "오늘도 천천히, 그러나 멈추지 않고 걸어가요.",
+  "손끝에서 시작된 작은 이야기가 하루를 환하게 밝혀요.",
+  "별빛이 가득한 밤, 키보드 위에서 손가락이 춤을 춰요."
+];
+
+// 타수 계산: 한글은 자판을 누르는 횟수(쌍자음, 겹모음, 겹받침은 2타)
+const INI = [1,2,1,1,2,1,1,1,2,1,2,1,1,2,1,1,1,1,1];
+const MED = [1,1,1,2,1,1,1,2,1,2,2,2,1,1,2,2,2,1,1,2,1];
+const FIN = [0,1,2,2,1,2,2,1,1,2,2,2,2,2,2,2,1,1,2,1,2,1,1,1,1,1,1,1];
+function keys(s){
+  let n = 0;
+  for (const ch of s){
+    const c = ch.charCodeAt(0) - 0xAC00;
+    if (c >= 0 && c < 11172) n += INI[Math.floor(c/588)] + MED[Math.floor(c/28)%21] + FIN[c%28];
+    else n += 1;
+  }
+  return n;
+}
+
+let list = [], idx = 0, wins = 0, phase = 'idle', sentence = '', total = 0;
+let t0 = 0, aiCPM = 0, aiSec = 0, raf = 0, resultAt = 0, comp = false;
+const inp = $('inp');
+
+function shuffle(a){ a = a.slice(); for (let i = a.length-1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; }
+function setPos(el, p){ el.style.left = 'calc((100% - 62px) * ' + p + ')'; }
+function prefixLen(t){ let i = 0; while (i < t.length && t[i] === sentence[i]) i++; return i; }
+
+$('startBtn').onclick = () => $('rules').showModal();
+$('goBtn').onclick = () => { $('rules').close(); startGame(); };
+
+function startGame(){
+  const mine = $('custom').value.split('\n').map(s => s.trim()).filter(Boolean);
+  list = mine.length ? mine : shuffle(DEFAULT).slice(0, 5);
+  idx = 0; wins = 0;
+  $('intro').classList.add('hide');
+  $('game').classList.remove('hide');
+  nextRound();
+}
+
+function nextRound(){
+  if (idx >= list.length) return finish();
+  sentence = list[idx];
+  total = keys(sentence);
+  aiCPM = Math.round(120 + Math.random()*300);
+  aiSec = total / aiCPM * 60;
+  inp.value = ''; inp.disabled = true;
+  setPos($('me'), 0); setPos($('ai'), 0);
+  $('round').textContent = (idx+1) + ' / ' + list.length + ' 문장';
+  $('score').textContent = '나 ' + wins + ' : ' + (idx - wins) + ' AI';
+  render();
+  phase = 'count';
+  let n = 3;
+  const tick = () => {
+    if (phase !== 'count') return;
+    if (n > 0){ $('msg').innerHTML = '<div class="count">' + n + '</div>'; n--; setTimeout(tick, 800); }
+    else { $('msg').innerHTML = '<div class="count">시작!</div>'; begin(); }
+  };
+  tick();
+}
+
+function begin(){
+  phase = 'race';
+  t0 = performance.now();
+  inp.disabled = false; inp.focus();
+  raf = requestAnimationFrame(loop);
+}
+
+function loop(now){
+  if (phase !== 'race') return;
+  const p = Math.min(1, (now - t0) / 1000 / aiSec);
+  setPos($('ai'), p);
+  if (p >= 1) return endRound(false);
+  raf = requestAnimationFrame(loop);
+}
+
+function render(){
+  const t = inp.value, box = $('text');
+  box.textContent = '';
+  for (let i = 0; i < sentence.length; i++){
+    const s = document.createElement('span');
+    if (i < t.length){
+      if (t[i] === sentence[i]) s.className = 'ok';
+      else s.className = (comp && i === t.length-1) ? 'cur' : 'bad';
+    } else if (i === t.length) s.className = 'cur';
+    s.textContent = sentence[i];
+    box.appendChild(s);
+  }
+}
+
+function check(){
+  if (phase !== 'race') return;
+  render();
+  setPos($('me'), prefixLen(inp.value) / sentence.length);
+  if (inp.value === sentence) endRound(true);
+}
+inp.addEventListener('input', check);
+inp.addEventListener('compositionstart', () => { comp = true; });
+inp.addEventListener('compositionend', () => { comp = false; check(); });
+inp.addEventListener('paste', e => e.preventDefault());
+
+function endRound(meWon){
+  const el = (performance.now() - t0) / 1000;
+  phase = 'result'; resultAt = performance.now();
+  cancelAnimationFrame(raf);
+  const typed = meWon ? total : keys(sentence.slice(0, prefixLen(inp.value)));
+  const cpm = Math.round(typed / el * 60);
+  inp.disabled = true; inp.blur();
+  if (meWon){ wins++; setPos($('me'), 1); } else setPos($('ai'), 1);
+  $('score').textContent = '나 ' + wins + ' : ' + (idx + 1 - wins) + ' AI';
+  const last = idx + 1 >= list.length;
+  $('msg').innerHTML =
+    '<div class="res"><strong>' + (meWon ? '내가 먼저 도착! 🏁' : 'AI가 먼저 도착했어요') + '</strong>' +
+    '<span class="st">내 기록: ' + typed + '타 · ' + el.toFixed(1) + '초 · 분당 ' + cpm + '타</span>' +
+    '<span class="st">AI 속도: 분당 ' + aiCPM + '타</span>' +
+    '<p class="hint">Enter를 누르면 ' + (last ? '최종 결과를 볼 수 있어요' : '다음 문장으로 넘어가요') + '</p>' +
+    '<button id="nextBtn">' + (last ? '결과 보기' : '다음 문장') + '</button></div>';
+  $('nextBtn').onclick = advance;
+}
+
+function advance(){
+  if (phase !== 'result') return;
+  idx++; nextRound();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && phase === 'result' && !e.isComposing && performance.now() - resultAt > 400){
+    e.preventDefault(); advance();
+  }
+});
+
+function finish(){
+  phase = 'end';
+  const n = list.length, lose = n - wins;
+  const title = wins > lose ? '내가 이겼어요! 🏆' : wins < lose ? 'AI가 이겼어요' : '무승부예요!';
+  $('text').textContent = '모든 문장을 마쳤어요';
+  $('round').textContent = '최종 결과';
+  $('msg').innerHTML =
+    '<div class="res"><strong>' + title + '</strong>' +
+    '<span class="st">나 ' + wins + ' : ' + lose + ' AI</span>' +
+    '<p class="hint">&nbsp;</p>' +
+    '<button id="again">다시 하기</button><button id="home">처음으로</button></div>';
+  $('again').onclick = startGame;
+  $('home').onclick = () => { phase = 'idle'; $('game').classList.add('hide'); $('intro').classList.remove('hide'); };
+}
+</script>
+</body>
+</html>
